@@ -67,7 +67,16 @@ _MEMCPY::
 	MOV	RDI,U64 SF_ARG1[RBP]
 	MOV	RSI,U64 SF_ARG2[RBP]
 	MOV	RCX,U64 SF_ARG3[RBP]
-	REP_MOVSB
+	MOV	RAX,RDI
+	SUB	RAX,RSI
+	CMP	RAX,8		//dst 0-7 bytes above src?
+	JB	@@05		//Overlap needs byte order
+	MOV	RDX,RCX
+	SHR	RCX,3
+	REP_MOVSQ		//Copy 8 bytes at a time
+	MOV	RCX,RDX
+	AND	RCX,7
+@@05:	REP_MOVSB		//Copy tail
 	MOV	RAX,RDI
 	POP	RDI
 	POP	RSI
