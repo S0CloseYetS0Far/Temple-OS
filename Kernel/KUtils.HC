@@ -91,8 +91,18 @@ _MEMCMP::
 	MOV	RSI,U64 SF_ARG1[RBP]
 	MOV	RDI,U64 SF_ARG2[RBP]
 	MOV	RCX,U64 SF_ARG3[RBP]
-	XOR	RAX,RAX
-	REPE_CMPSB
+	MOV	RDX,RCX
+	SHR	RCX,3
+	XOR	RAX,RAX		//Also sets ZF for cnt==0
+	REPE_CMPSQ		//Compare 8 bytes at a time
+	JZ	@@02
+	SUB	RSI,8		//Mismatch: find the byte
+	SUB	RDI,8
+	MOV	RCX,8
+	JMP	@@03
+@@02:	MOV	RCX,RDX
+	AND	RCX,7		//ZF set if no tail
+@@03:	REPE_CMPSB
 	JZ	@@05
 	MOV	AL,1
 	JA	@@05
